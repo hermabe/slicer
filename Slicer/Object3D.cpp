@@ -1,5 +1,5 @@
+#include <cmath>
 #include <fstream>
-#include <iostream>
 #include <regex>
 #include <sstream>
 
@@ -193,10 +193,4 @@ void Object3D::fromFile(string filename, bool binary)
 		fromASCIIFile(filename);
 	}
 
-}
-
-istream& operator>>(istream & in, Vector3d & v)
-{
-	in >> v.x >> v.y >> v.z;
-	return in;
 }
