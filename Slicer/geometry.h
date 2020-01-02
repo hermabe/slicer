@@ -1,47 +1,52 @@
 #pragma once
 #include <cmath>
 #include <iostream>
+#include <vector>
+#include <array>
 
-template<unsigned int N>
+template<typename T, unsigned int N>
 class Vector
 {
 public:
 	template<typename... Args>
-	Vector<N>(Args... args) : elements{ args... } {
+	Vector<T, N>(Args... args) : elements{ args... } {
 		static_assert(sizeof... (Args) == N, "Wrong number of elements supplied in constructor");
 	}
-	Vector<N>();
+	Vector<T, N>();
+	template<unsigned int M>
+	Vector<T, N>(const Vector<T, M>& rhs);
 
-	Vector<N>& operator+=(const Vector<N>& rhs);
-	Vector<N> operator+(const Vector<N>& rhs) const;
-	Vector<N> operator-() const;
-	Vector<N>& operator-=(const Vector<N>& rhs);
-	Vector<N> operator-(const Vector<N>& rhs) const;
-	Vector<N>& operator*=(float rhs);
-	Vector<N> operator*(float rhs) const;
-	friend Vector<N> operator*(float lhs, const Vector<N>& rhs);
-	Vector<N>& operator/=(float rhs);
-	Vector<N> operator/(float rhs) const;
-	friend Vector<N> operator/(float lhs, const Vector<N>& rhs);
+	Vector<T, N>& operator+=(const Vector<T, N>& rhs);
+	Vector<T, N> operator+(const Vector<T, N>& rhs) const;
+	Vector<T, N> operator-() const;
+	Vector<T, N>& operator-=(const Vector<T, N>& rhs);
+	Vector<T, N> operator-(const Vector<T, N>& rhs) const;
+	Vector<T, N>& operator*=(T rhs);
+	Vector<T, N> operator*(T rhs) const;
+	friend Vector<T, N> operator*(T lhs, const Vector<T, N>& rhs);
+	Vector<T, N>& operator/=(T rhs);
+	Vector<T, N> operator/(T rhs) const;
+	friend Vector<T, N> operator/(T lhs, const Vector<T, N>& rhs);
 
-	float& operator[](unsigned int i);
-	float operator[](unsigned int i) const;
+	T& operator[](unsigned int i);
+	T operator[](unsigned int i) const;
 
 	void normalize();
-	float length() const;
-	float dot(const Vector<N>& rhs) const;
+	T length() const;
+	T dot(const Vector<T, N>& rhs) const;
 private:
-	float elements[N];
+	T elements[N];
 };
 
-typedef Vector<3> Vector3d;
-typedef Vector<2> Vector2d;
+typedef Vector<float, 3> Vector3d;
+typedef Vector<float, 2> Vector2d;
 
 class Triangle
 {
 public:
 	Vector3d normal;
-	Vector3d vertices[3];
+	//Vector3d vertices[3];
+	std::array<Vector3d, 3> vertices;
 };
 
 struct Plane {
@@ -52,17 +57,42 @@ struct Line {
 	Vector3d point, direction;
 };
 
-template<unsigned int N>
-inline Vector<N>::Vector()
+struct Edge {
+	Vector2d start, end, normal;
+};
+
+struct Polygon {
+	std::vector<Vector2d> vertices;
+};
+
+Vector3d intersection(const Plane& plane, const Line& line);
+
+template<typename T, unsigned int N>
+inline Vector<T, N>::Vector()
 {
 	for (unsigned int i = 0; i < N; i++)
 	{
-		elements[i] = 0.0f;
+		elements[i] = 0;
 	}
 }
 
-template<unsigned int N>
-inline Vector<N>& Vector<N>::operator+=(const Vector<N>& rhs)
+template<unsigned int a, unsigned int b>
+struct min {
+	enum { value = a < b ? a : b };
+};
+
+template<typename T, unsigned int N>
+template<unsigned int M>
+inline Vector<T, N>::Vector(const Vector<T, M>& rhs) : Vector<T, N>()
+{
+	for (unsigned int i = 0; i < min<N, M>::value; i++)
+	{
+		this->elements[i] = rhs[i];
+	}
+}
+
+template<typename T, unsigned int N>
+inline Vector<T, N>& Vector<T, N>::operator+=(const Vector<T, N>& rhs)
 {
 	for (unsigned int i = 0; i < N; i++)
 	{
@@ -71,35 +101,35 @@ inline Vector<N>& Vector<N>::operator+=(const Vector<N>& rhs)
 	return *this;
 }
 
-template<unsigned int N>
-inline Vector<N> Vector<N>::operator+(const Vector<N>& rhs) const
+template<typename T, unsigned int N>
+inline Vector<T, N> Vector<T, N>::operator+(const Vector<T, N>& rhs) const
 {
-	Vector<N> result(*this);
+	Vector<T, N> result(*this);
 	return result += rhs;
 }
 
-template<unsigned int N>
-inline Vector<N> Vector<N>::operator-() const
+template<typename T, unsigned int N>
+inline Vector<T, N> Vector<T, N>::operator-() const
 {
-	Vector<N> result(*this);
+	Vector<T, N> result(*this);
 	return result * -1.0f;
 }
 
-template<unsigned int N>
-inline Vector<N>& Vector<N>::operator-=(const Vector<N>& rhs)
+template<typename T, unsigned int N>
+inline Vector<T, N>& Vector<T, N>::operator-=(const Vector<T, N>& rhs)
 {
 	return (*this) += -rhs;
 }
 
-template<unsigned int N>
-inline Vector<N> Vector<N>::operator-(const Vector<N>& rhs) const
+template<typename T, unsigned int N>
+inline Vector<T, N> Vector<T, N>::operator-(const Vector<T, N>& rhs) const
 {
-	Vector<N> result(*this);
+	Vector<T, N> result(*this);
 	return result -= rhs;
 }
 
-template<unsigned int N>
-inline Vector<N>& Vector<N>::operator*=(float rhs)
+template<typename T, unsigned int N>
+inline Vector<T, N>& Vector<T, N>::operator*=(T rhs)
 {
 	for (unsigned int i = 0; i < N; i++)
 	{
@@ -108,54 +138,54 @@ inline Vector<N>& Vector<N>::operator*=(float rhs)
 	return *this;
 }
 
-template<unsigned int N>
-inline Vector<N> Vector<N>::operator*(float rhs) const
+template<typename T, unsigned int N>
+inline Vector<T, N> Vector<T, N>::operator*(T rhs) const
 {
-	Vector<N> result(*this);
+	Vector<T, N> result(*this);
 	return result *= rhs;
 }
 
-template<unsigned int N>
-inline Vector<N>& Vector<N>::operator/=(float rhs)
+template<typename T, unsigned int N>
+inline Vector<T, N>& Vector<T, N>::operator/=(T rhs)
 {
 	return (*this) *= (1.0f / rhs);
 }
 
-template<unsigned int N>
-inline Vector<N> Vector<N>::operator/(float rhs) const
+template<typename T, unsigned int N>
+inline Vector<T, N> Vector<T, N>::operator/(T rhs) const
 {
-	Vector<N> result(*this);
+	Vector<T, N> result(*this);
 	return result /= rhs;
 }
 
-template<unsigned int N>
-inline float& Vector<N>::operator[](unsigned int i)
+template<typename T, unsigned int N>
+inline T& Vector<T, N>::operator[](unsigned int i)
 {
 	return elements[i];
 }
 
-template<unsigned int N>
-inline float Vector<N>::operator[](unsigned int i) const
+template<typename T, unsigned int N>
+inline T Vector<T, N>::operator[](unsigned int i) const
 {
 	return elements[i];
 }
 
-template<unsigned int N>
-inline void Vector<N>::normalize()
+template<typename T, unsigned int N>
+inline void Vector<T, N>::normalize()
 {
 	(*this) /= this->length();
 }
 
-template<unsigned int N>
-inline float Vector<N>::length() const
+template<typename T, unsigned int N>
+inline T Vector<T, N>::length() const
 {
 	return std::sqrtf(this->dot(*this));
 }
 
-template<unsigned int N>
-inline float Vector<N>::dot(const Vector<N> & rhs) const
+template<typename T, unsigned int N>
+inline T Vector<T, N>::dot(const Vector<T, N> & rhs) const
 {
-	float result = 0.0f;
+	T result = 0;
 	for (unsigned int i = 0; i < N; i++)
 	{
 		result += this->elements[i] * rhs.elements[i];
@@ -164,8 +194,8 @@ inline float Vector<N>::dot(const Vector<N> & rhs) const
 	return result;
 }
 
-template<unsigned int N>
-inline std::ostream& operator<<(std::ostream & out, const Vector<N> & v) {
+template<typename T, unsigned int N>
+inline std::ostream& operator<<(std::ostream & out, const Vector<T, N> & v) {
 	out << "[";
 	for (unsigned int i = 0; i < N; i++)
 	{
@@ -178,8 +208,8 @@ inline std::ostream& operator<<(std::ostream & out, const Vector<N> & v) {
 	return out;
 }
 
-template<unsigned int N>
-inline std::istream& operator>>(std::istream & in, Vector<N> & v) {
+template<typename T, unsigned int N>
+inline std::istream& operator>>(std::istream & in, Vector<T, N> & v) {
 	for (unsigned int i = 0; i < N; i++)
 	{
 		in >> v[i];
@@ -187,14 +217,14 @@ inline std::istream& operator>>(std::istream & in, Vector<N> & v) {
 	return in;
 }
 
-template<unsigned int N>
-inline Vector<N> operator*(float lhs, const Vector<N> & rhs) {
-	Vector<N> result(*this);
+template<typename T, unsigned int N>
+inline Vector<T, N> operator*(T lhs, const Vector<T, N> & rhs) {
+	Vector<T, N> result(*this);
 	return result *= rhs;
 }
 
-template<unsigned int N>
-inline Vector<N> operator/(float lhs, const Vector<N> & rhs) {
-	Vector<N> result(*this);
+template<typename T, unsigned int N>
+inline Vector<T, N> operator/(T lhs, const Vector<T, N> & rhs) {
+	Vector<T, N> result(*this);
 	return result /= rhs;
 }
