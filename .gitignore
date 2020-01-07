@@ -341,4 +341,7 @@ healthchecksdb
 
 *.stl
 *.obj
+*.html
+*.svg
+*.xlsx
 
