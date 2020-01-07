@@ -1,5 +1,5 @@
-#include <cmath>
 #include <fstream>
+#include <optional>
 #include <regex>
 #include <sstream>
 
@@ -18,8 +18,8 @@ Vector3d bytesToVector3d(unsigned char bytes[12]) {
 	return Vector3d(bytesToFloat(bytes), bytesToFloat(bytes + 4), bytesToFloat(bytes + 8));
 }
 
-Triangle readBinaryFacet(ifstream& file) {
-	Triangle triangle;
+Triangle3d readBinaryFacet(ifstream & file) {
+	Triangle3d triangle;
 
 	// Read normal 3*4 byte little-endian float
 	constexpr int buf_size = 12;
@@ -78,7 +78,7 @@ void Object3D::fromBinaryFile(string filename) {
 	//}
 }
 
-Triangle readASCIIFacet(ifstream & file) {
+Triangle3d readASCIIFacet(ifstream & file) {
 	regex normal("^ *normal .*");
 	regex loopstart("^ *outer loop$");
 	regex vertexstart("^ *vertex .*");
@@ -97,7 +97,7 @@ Triangle readASCIIFacet(ifstream & file) {
 	string junk;
 	stringstream ss(line);
 	ss >> junk; // Remove "normal"
-	Triangle triangle;
+	Triangle3d triangle;
 	ss >> triangle.normal;
 
 	// Read loop start
@@ -193,4 +193,100 @@ void Object3D::fromFile(string filename, bool binary)
 		fromASCIIFile(filename);
 	}
 
+}
+
+Line get_triangle_edge(const Triangle3d & triangle, unsigned int index)
+{
+	return Line{ triangle.vertices[index], (triangle.vertices[(index + 1) % 3] - triangle.vertices[index]) };
+}
+
+std::optional<Vector2d> extractClose(std::vector<Edge2d> & edges, const Vector2d & vertex, const Vector2d & direction) {
+	Vector2d result;
+	auto minIt = edges.end();
+	float min_angle = INFINITY;
+	for (auto it = edges.begin(), end = edges.end(); it != end; ++it) {
+		if (it->start.isClose(vertex) && it->normal.length() > 1e-6) {
+			float angle = directionalAngle(direction, it->end - it->start);
+			if (angle < min_angle) {
+				result = it->end;
+				minIt = it;
+				min_angle = angle;
+			}
+
+		}
+		else if (it->end.isClose(vertex) && it->normal.length() > 1e-6) {
+			float angle = directionalAngle(direction, it->start - it->end);
+			if (angle < min_angle) {
+				result = it->start;
+				minIt = it;
+				min_angle = angle;
+			}
+		}
+	}
+	if (minIt != edges.end())
+	{
+		edges.erase(minIt);
+		return result;
+	}
+	return {};
+}
+
+std::optional<SimplePolygon> linkEdges(std::vector<Edge2d> & edges) {
+	// Removes elements from edges and combines them into a simple polygon
+	std::vector<Edge2d>::iterator max = std::max_element(edges.begin(), edges.end(),
+		[](const Edge2d & lhs, const Edge2d & rhs) {
+			// Find edge furthest in one direction to ensure to be on outermost perimeter
+			return std::max(lhs.start[0], lhs.end[0]) < std::max(rhs.start[0], rhs.end[0]);
+		});
+
+	SimplePolygon polygon;
+	Vector2d start = max->start[0] > max->end[0] ? max->start : max->end;
+	Vector2d vertex = start, prev;
+	Vector2d direction(1.0f, 0.0f);
+	do {
+		polygon.vertices.push_back(vertex);
+		prev = vertex;
+		auto extraction = extractClose(edges, vertex, direction);
+		if (!extraction) {
+			return {};
+		}
+		vertex = *extraction;
+		direction = vertex - prev;
+	} while (!vertex.isClose(start));
+	return polygon;
+}
+
+Polygon Object3D::intersect(const Plane & plane) const
+{
+	// Find intersections between plane and triangles. Assumes plane intersects.
+	std::vector<Edge3d> edges3d;
+	for (const Triangle3d& triangle : intersects(this->triangles, plane))
+	{
+		std::vector<Edge3d> edges = intersection(plane, triangle);
+		edges3d.insert(edges3d.end(), edges.cbegin(), edges.cend());
+	}
+
+	// Project edges into plane
+	std::vector<Edge2d> projected(edges3d.size());
+	auto dest = projected.begin();
+	for (auto it = edges3d.begin(), end = edges3d.end(); it != end; ++it, ++dest) {
+		*dest = project(plane, *it);
+	}
+
+	// Link edges
+	Polygon intersection;
+	auto poly = linkEdges(projected);
+	if (!poly) {
+		throw std::runtime_error("Could not link edges");
+	}
+	intersection.exterior = *poly;
+	while (!projected.empty()) {
+		poly = linkEdges(projected);
+		if (!poly) {
+			break;
+		}
+		intersection.interior.push_back(*poly);
+	}
+
+	return intersection;
 }

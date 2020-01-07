@@ -4,17 +4,15 @@
 
 #include "geometry.h"
 
-using std::istream;
 using std::string;
-using std::vector;
 
 class Object3D
 {
 public:
 	void fromFile(string filename, bool binary = false);
-
+	Polygon intersect(const Plane& plane) const;
 private:
-	vector<Triangle> triangles;
+	std::vector<Triangle3d> triangles;
 
 	void fromASCIIFile(string filename);
 	void fromBinaryFile(string filename);
