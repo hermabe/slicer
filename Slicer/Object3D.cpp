@@ -215,11 +215,6 @@ std::optional<Vector2d> extractClose(std::vector<Edge2d>& edges, const Vector2d&
 	auto minIt = edges.end();
 	float minAngle = INFINITY;
 	for (auto it = edges.begin(), end = edges.end(); it != end; ++it) {
-		if (it->normal.length() < 1e-6) {
-			// Parallell to plane, skip
-			continue;
-		}
-
 		auto angleAndVertex = angleAndVertexIfClose(*it, vertex, direction);
 		if (!angleAndVertex) {
 			// Edge not close, skip
@@ -286,6 +281,13 @@ Polygon Object3D::intersect(const Plane & plane) const
 	for (auto it = edges3d.begin(), end = edges3d.end(); it != end; ++it, ++dest) {
 		*dest = project(plane, *it);
 	}
+
+	// Remove edges in plane
+	projected.erase(
+		std::remove_if(projected.begin(), projected.end(), [](const Edge2d & edge) {
+			return edge.normal.length() < 1e-6;
+			}),
+		projected.end());
 
 	// Link edges
 	Polygon intersection;
