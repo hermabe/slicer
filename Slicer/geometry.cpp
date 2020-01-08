@@ -166,11 +166,7 @@ float directionalAngle(const Vector2d & lhs, const Vector2d & rhs)
 {
 	float angle = std::acos(lhs.dot(rhs) / (lhs.length() * rhs.length()));
 	float cross = lhs[0] * rhs[1] - lhs[1] * rhs[0];
-	if (cross < 0)
-	{
-		angle += PI;
-	}
-	return angle;
+	return cross > 0 ? angle : 2*PI - angle;
 }
 
 bool aboveOrBelow(const Plane & plane, const Triangle3d & triangle) {
