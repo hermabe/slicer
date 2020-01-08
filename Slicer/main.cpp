@@ -11,19 +11,11 @@ using std::endl;
 
 int main() {
 	Object3D obj;
-	obj.fromFile("stl/ring_txt.stl");
+	obj.fromFile("stl/ring_bin.stl", true);
 	Plane plane(Vector3d(0.0f, 0.0f, 5.0f), Vector3d(0.0f, 0.0f, 1.0f), Vector3d(1.0f, 0.0f, 0.0f));
-	try
-	{
-		Polygon pol = obj.intersect(plane);
+	Polygon pol = obj.intersect(plane);
 
-		saveAsSVG(pol, "pol.svg", 10);
-		system("pol.svg");
-	}
-	catch (const std::exception & e)
-	{
-		cerr << e.what() << endl;
-	}
-
+	saveAsSVG(pol, "pol.svg", 10);
+	system("pol.svg");
 	return 0;
 }

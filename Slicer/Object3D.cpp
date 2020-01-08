@@ -200,33 +200,46 @@ Line get_triangle_edge(const Triangle3d & triangle, unsigned int index)
 	return Line{ triangle.vertices[index], (triangle.vertices[(index + 1) % 3] - triangle.vertices[index]) };
 }
 
-std::optional<Vector2d> extractClose(std::vector<Edge2d> & edges, const Vector2d & vertex, const Vector2d & direction) {
-	Vector2d result;
-	auto minIt = edges.end();
-	float min_angle = INFINITY;
-	for (auto it = edges.begin(), end = edges.end(); it != end; ++it) {
-		if (it->start.isClose(vertex) && it->normal.length() > 1e-6) {
-			float angle = directionalAngle(direction, it->end - it->start);
-			if (angle < min_angle) {
-				result = it->end;
-				minIt = it;
-				min_angle = angle;
-			}
+std::optional<std::pair<float, Vector2d>>  angleAndVertexIfClose(const Edge2d& edge, const Vector2d& vertex, const Vector2d& direction) {
+	if (vertex.isClose(edge.start)) {
+		return std::make_pair(directionalAngle(direction, edge.end - edge.start), edge.end);
+	}
+	else if (vertex.isClose(edge.end)) {
+		return std::make_pair(directionalAngle(direction, edge.start - edge.end), edge.start);
+	}
+	return {};
+}
 
+std::optional<Vector2d> extractClose(std::vector<Edge2d>& edges, const Vector2d& vertex, const Vector2d& direction) {
+	Vector2d minVertex;
+	auto minIt = edges.end();
+	float minAngle = INFINITY;
+	for (auto it = edges.begin(), end = edges.end(); it != end; ++it) {
+		if (it->normal.length() < 1e-6) {
+			// Parallell to plane, skip
+			continue;
 		}
-		else if (it->end.isClose(vertex) && it->normal.length() > 1e-6) {
-			float angle = directionalAngle(direction, it->start - it->end);
-			if (angle < min_angle) {
-				result = it->start;
-				minIt = it;
-				min_angle = angle;
-			}
+
+		auto angleAndVertex = angleAndVertexIfClose(*it, vertex, direction);
+		if (!angleAndVertex) {
+			// Edge not close, skip
+			continue;
+		}
+
+		auto [angle, vertex] = *angleAndVertex;
+
+		// Find minimum
+		if (angle < minAngle) {
+			minVertex = vertex;
+			minIt = it;
+			minAngle = angle;
 		}
 	}
+
 	if (minIt != edges.end())
 	{
 		edges.erase(minIt);
-		return result;
+		return minVertex;
 	}
 	return {};
 }
@@ -245,11 +258,12 @@ std::optional<SimplePolygon> linkEdges(std::vector<Edge2d> & edges) {
 	Vector2d direction(1.0f, 0.0f);
 	do {
 		polygon.vertices.push_back(vertex);
-		prev = vertex;
+
 		auto extraction = extractClose(edges, vertex, direction);
 		if (!extraction) {
 			return {};
 		}
+		prev = vertex;
 		vertex = *extraction;
 		direction = vertex - prev;
 	} while (!vertex.isClose(start));
