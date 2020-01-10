@@ -18,18 +18,16 @@ float planeCosine(const Plane & plane, const Vector3d & vertex) {
 };
 
 std::array<int, 3> vertexPositions(const Plane & plane, const Triangle3d & triangle) {
-	constexpr float error = 1e-6;
-
 	std::array<int, 3> result;
 	auto dest = result.begin();
 	for (auto begin = triangle.vertices.cbegin(), end = triangle.vertices.cend(); begin != end; ++begin, ++dest)
 	{
 		float cosine = planeCosine(plane, *begin);
-		if (cosine > error)
+		if (cosine > FLOATERROR)
 		{
 			*dest = 1;
 		}
-		else if (cosine < -error) {
+		else if (cosine < -FLOATERROR) {
 			*dest = -1;
 		}
 		else {
@@ -61,7 +59,7 @@ std::vector<Edge3d> intersection(const Plane & plane, const Triangle3d & triangl
 	// Assumes triangle intersects plane
 
 	std::array<int, 3> position = vertexPositions(plane, triangle);
-	unsigned int numberOfVerticesInPlane = std::count_if(position.cbegin(), position.cend(),
+	long long int numberOfVerticesInPlane = std::count_if(position.cbegin(), position.cend(),
 		[&](int value) {
 			return value == 0;
 		});
@@ -164,9 +162,14 @@ Triangle3d withEdge(const std::vector<Triangle3d> & trianglesWithVertex, const V
 
 float directionalAngle(const Vector2d & lhs, const Vector2d & rhs)
 {
-	float angle = std::acos(lhs.dot(rhs) / (lhs.length() * rhs.length()));
+	float angle = std::acosf(saturate(lhs.dot(rhs) / (lhs.length() * rhs.length()), -1.0f, 1.0f));
 	float cross = lhs[0] * rhs[1] - lhs[1] * rhs[0];
-	return cross > 0 ? angle : 2*PI - angle;
+	return cross > 0 ? angle : 2 * PI - angle;
+}
+
+float saturate(float value, float minimum, float maximum)
+{
+	return std::max(minimum, std::min(value, maximum));
 }
 
 bool aboveOrBelow(const Plane & plane, const Triangle3d & triangle) {

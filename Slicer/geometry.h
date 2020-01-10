@@ -4,7 +4,8 @@
 #include <vector>
 #include <array>
 
-constexpr float PI = 3.14159265359;
+constexpr float PI = 3.14159265359f;
+constexpr float FLOATERROR = 1e-5f;
 
 template<typename T, unsigned int N>
 class Vector
@@ -38,7 +39,7 @@ public:
 	Vector<T, N> normalized() const;
 	T length() const;
 	T dot(const Vector<T, N>& rhs) const;
-	bool isClose(const Vector<T, N>& rhs, T tolerance = 1e-6) const;
+	bool isClose(const Vector<T, N>& rhs, T tolerance = FLOATERROR) const;
 private:
 	T elements[N]{};
 };
@@ -93,12 +94,7 @@ struct SimplePolygon {
 struct Polygon {
 	// Represents a complex polygon.
 	// Can have zero or more "holes" which are SimplePolygons
-	SimplePolygon exterior;
-	std::vector<SimplePolygon> interior;
-};
-
-struct MultiPolygon {
-	std::vector<Polygon> polygons;
+	std::vector<SimplePolygon> paths;
 };
 
 std::vector<Triangle3d> intersects(const std::vector<Triangle3d>& triangles, const Plane& plane);
@@ -113,6 +109,7 @@ Triangle3d withEdge(const std::vector<Triangle3d>& triangles, const Vector3d& fi
 Triangle3d withEdge(const std::vector<Triangle3d>& withVertex, const Vector3d& secondVertex);
 
 float directionalAngle(const Vector2d& lhs, const Vector2d& rhs);
+float saturate(float value, float minimum, float maximum);
 
 template<unsigned int a, unsigned int b>
 struct min {

@@ -11,7 +11,7 @@ using std::endl;
 
 int main() {
 	Object3D obj;
-	obj.fromFile("stl/ring_bin.stl", true);
+	obj.fromFile("stl/concave.stl", true);
 	Plane plane(Vector3d(0.0f, 0.0f, 0.0f), Vector3d(0.0f, 0.0f, 1.0f), Vector3d(1.0f, 0.0f, 0.0f));
 	Polygon pol = obj.intersect(plane);
 

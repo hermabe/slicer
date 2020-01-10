@@ -200,7 +200,7 @@ Line get_triangle_edge(const Triangle3d & triangle, unsigned int index)
 	return Line{ triangle.vertices[index], (triangle.vertices[(index + 1) % 3] - triangle.vertices[index]) };
 }
 
-std::optional<std::pair<float, Vector2d>>  angleAndVertexIfClose(const Edge2d& edge, const Vector2d& vertex, const Vector2d& direction) {
+std::optional<std::pair<float, Vector2d>>  angleAndVertexIfClose(const Edge2d & edge, const Vector2d & vertex, const Vector2d & direction) {
 	if (vertex.isClose(edge.start)) {
 		return std::make_pair(directionalAngle(direction, edge.end - edge.start), edge.end);
 	}
@@ -210,7 +210,7 @@ std::optional<std::pair<float, Vector2d>>  angleAndVertexIfClose(const Edge2d& e
 	return {};
 }
 
-std::optional<Vector2d> extractClose(std::vector<Edge2d>& edges, const Vector2d& vertex, const Vector2d& direction) {
+std::optional<Vector2d> extractClose(std::vector<Edge2d> & edges, const Vector2d & vertex, const Vector2d & direction) {
 	Vector2d minVertex;
 	auto minIt = edges.end();
 	float minAngle = INFINITY;
@@ -267,9 +267,14 @@ std::optional<SimplePolygon> linkEdges(std::vector<Edge2d> & edges) {
 
 Polygon Object3D::intersect(const Plane & plane) const
 {
-	// Find intersections between plane and triangles. Assumes plane intersects.
+	std::vector<Triangle3d> intersectingTriangles = intersects(this->triangles, plane);
+	if (intersectingTriangles.empty()) {
+		throw std::runtime_error("Plane does not intersect");
+	}
+
+	// Find intersections between plane and triangles.
 	std::vector<Edge3d> edges3d;
-	for (const Triangle3d& triangle : intersects(this->triangles, plane))
+	for (const Triangle3d& triangle : intersectingTriangles)
 	{
 		std::vector<Edge3d> edges = intersection(plane, triangle);
 		edges3d.insert(edges3d.end(), edges.cbegin(), edges.cend());
@@ -282,10 +287,10 @@ Polygon Object3D::intersect(const Plane & plane) const
 		*dest = project(plane, *it);
 	}
 
-	// Remove edges in plane
+	// Remove edges from triangles in plane
 	projected.erase(
 		std::remove_if(projected.begin(), projected.end(), [](const Edge2d & edge) {
-			return edge.normal.length() < 1e-6;
+			return edge.normal.length() < FLOATERROR;
 			}),
 		projected.end());
 
@@ -295,13 +300,13 @@ Polygon Object3D::intersect(const Plane & plane) const
 	if (!poly) {
 		throw std::runtime_error("Could not link edges");
 	}
-	intersection.exterior = *poly;
+	intersection.paths.push_back(*poly);
 	while (!projected.empty()) {
 		poly = linkEdges(projected);
 		if (!poly) {
 			break;
 		}
-		intersection.interior.push_back(*poly);
+		intersection.paths.push_back(*poly);
 	}
 
 	return intersection;

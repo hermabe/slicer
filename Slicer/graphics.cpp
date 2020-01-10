@@ -23,9 +23,8 @@ void saveAsSVG(const Polygon& poly, const std::string& filename, float scale)
 	file << "<svg xmlns=\"http://www.w3.org/2000/svg\" ";
 	file << "height=\"100%\" width=\"100%\" style=\"fill: darkgrey; stroke: black; stroke-width: 2;\">" << std::endl;
 	file << "<path fill-rule=\"evenodd\" d=\"";
-	file << toSVG(poly.exterior, scale) << std::endl;
-	for (const auto& interior : poly.interior) {
-		file << toSVG(interior, scale) << std::endl;
+	for (const auto& path : poly.paths) {
+		file << toSVG(path, scale) << std::endl;
 	}
 	file << "\"/>" << std::endl;
 	file << "</svg>";
