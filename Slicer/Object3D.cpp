@@ -311,3 +311,39 @@ Polygon Object3D::intersect(const Plane & plane) const
 
 	return intersection;
 }
+
+std::vector<Polygon> Object3D::slice(const Plane & plane, float layerHeight)
+{
+	std::vector<Polygon> slices;
+	Plane intersector = plane;
+	auto [min, max] = minMax(plane.normal);
+	float startDistance = plane.point.dot(intersector.normal) / intersector.normal.length();
+
+
+	for (float distance = min; distance <= max; distance += layerHeight) {
+		intersector.point = plane.point + plane.normal * (distance - startDistance);
+		slices.push_back(intersect(intersector));
+	}
+
+	return slices;
+}
+
+std::pair<float, float> Object3D::minMax(const Vector3d & direction)
+{
+	float min = INFINITY, max = -INFINITY;
+	for (const auto& triangle : this->triangles)
+	{
+		for (const auto& vertex : triangle.vertices) {
+			float distance = vertex.dot(direction);
+			if (distance < min) {
+				min = distance;
+			}
+			if (distance > max) {
+				max = distance;
+			}
+		}
+	}
+	// Length of direction factored out from loop
+	float directionLength = direction.length();
+	return std::pair<float, float>(min / directionLength, max / directionLength);
+}

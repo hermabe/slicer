@@ -1,5 +1,6 @@
+#include <iomanip>
 #include <iostream>
-#include <set>
+#include <sstream>
 
 #include "geometry.h"
 #include "Object3D.h"
@@ -11,11 +12,15 @@ using std::endl;
 
 int main() {
 	Object3D obj;
-	obj.fromFile("stl/concave.stl", true);
+	obj.fromFile("stl/u_bin.stl", true);
 	Plane plane(Vector3d(0.0f, 0.0f, 0.0f), Vector3d(0.0f, 0.0f, 1.0f), Vector3d(1.0f, 0.0f, 0.0f));
-	Polygon pol = obj.intersect(plane);
+	//Polygon pol = obj.intersect(plane);
+	std::vector<Polygon> slices = obj.slice(plane, 1.0f);
+	for (int i = 0; i < slices.size(); ++i) {
+		std::stringstream ss;
+		ss << std::setw(4) << std::setfill('0') << i;
+		saveAsSVG(slices[i], "svg/" + ss.str() + ".svg", 1);
+	}
 
-	saveAsSVG(pol, "pol.svg", 10);
-	system("pol.svg");
 	return 0;
 }
