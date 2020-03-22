@@ -312,6 +312,22 @@ Polygon Object3D::intersect(const Plane & plane) const
 	return intersection;
 }
 
+Polygon combineEdges(Polygon poly) {
+	for (auto& path : poly.paths) {
+		for (unsigned int i = 0; i < path.vertices.size(); i++) {
+			unsigned int size = path.vertices.size();
+			Vector2d prev = path.vertices[i] - path.vertices[(i + size - 1) % size];
+			Vector2d next = path.vertices[(i + 1 + size) % size] - path.vertices[i];
+			float cross = prev[0] * next[1] - prev[1] * next[0]; // 2D cross product
+			if (abs(cross) < FLOATERROR) {
+				// Remove, edge from prev to next is a straight line
+				path.vertices.erase(path.vertices.begin() + i);
+			}
+		}
+	}
+	return poly;
+}
+
 std::vector<Polygon> Object3D::slice(const Plane & plane, float layerHeight)
 {
 	std::vector<Polygon> slices;
@@ -322,7 +338,7 @@ std::vector<Polygon> Object3D::slice(const Plane & plane, float layerHeight)
 
 	for (float distance = min; distance <= max; distance += layerHeight) {
 		intersector.point = plane.point + plane.normal * (distance - startDistance);
-		slices.push_back(intersect(intersector));
+		slices.push_back(combineEdges(intersect(intersector)));
 	}
 
 	return slices;
