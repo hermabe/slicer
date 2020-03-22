@@ -1,8 +1,8 @@
 #pragma once
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include <array>
 
 constexpr float PI = 3.14159265359f;
 constexpr float FLOATERROR = 1e-5f;
@@ -224,7 +224,7 @@ inline T Vector<T, N>::length() const
 }
 
 template<typename T, unsigned int N>
-inline T Vector<T, N>::dot(const Vector<T, N> & rhs) const
+inline T Vector<T, N>::dot(const Vector<T, N>& rhs) const
 {
 	T result = 0;
 	for (unsigned int i = 0; i < N; i++)
@@ -236,13 +236,13 @@ inline T Vector<T, N>::dot(const Vector<T, N> & rhs) const
 }
 
 template<typename T, unsigned int N>
-inline bool Vector<T, N>::isClose(const Vector<T, N> & rhs, T tolerance) const
+inline bool Vector<T, N>::isClose(const Vector<T, N>& rhs, T tolerance) const
 {
 	return (*this - rhs).length() < tolerance;
 }
 
 template<typename T, unsigned int N>
-inline std::ostream& operator<<(std::ostream & out, const Vector<T, N> & v) {
+inline std::ostream& operator<<(std::ostream& out, const Vector<T, N>& v) {
 	out << "[";
 	for (unsigned int i = 0; i < N; i++)
 	{
@@ -256,7 +256,7 @@ inline std::ostream& operator<<(std::ostream & out, const Vector<T, N> & v) {
 }
 
 template<typename T, unsigned int N>
-inline std::istream& operator>>(std::istream & in, Vector<T, N> & v) {
+inline std::istream& operator>>(std::istream& in, Vector<T, N>& v) {
 	for (unsigned int i = 0; i < N; i++)
 	{
 		in >> v[i];
@@ -265,13 +265,13 @@ inline std::istream& operator>>(std::istream & in, Vector<T, N> & v) {
 }
 
 template<typename T, unsigned int N>
-inline Vector<T, N> operator*(T lhs, const Vector<T, N> & rhs) {
+inline Vector<T, N> operator*(T lhs, const Vector<T, N>& rhs) {
 	Vector<T, N> result(*this);
 	return result *= rhs;
 }
 
 template<typename T, unsigned int N>
-inline Vector<T, N> operator/(T lhs, const Vector<T, N> & rhs) {
+inline Vector<T, N> operator/(T lhs, const Vector<T, N>& rhs) {
 	Vector<T, N> result(*this);
 	return result /= rhs;
 }

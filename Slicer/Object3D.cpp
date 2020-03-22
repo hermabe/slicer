@@ -1,4 +1,5 @@
 #include <fstream>
+#include <list>
 #include <optional>
 #include <regex>
 #include <sstream>
@@ -18,7 +19,7 @@ Vector3d bytesToVector3d(unsigned char bytes[12]) {
 	return Vector3d(bytesToFloat(bytes), bytesToFloat(bytes + 4), bytesToFloat(bytes + 8));
 }
 
-Triangle3d readBinaryFacet(ifstream & file) {
+Triangle3d readBinaryFacet(ifstream& file) {
 	Triangle3d triangle;
 
 	// Read normal 3*4 byte little-endian float
@@ -78,7 +79,7 @@ void Object3D::fromBinaryFile(string filename) {
 	//}
 }
 
-Triangle3d readASCIIFacet(ifstream & file) {
+Triangle3d readASCIIFacet(ifstream& file) {
 	regex normal("^ *normal .*");
 	regex loopstart("^ *outer loop$");
 	regex vertexstart("^ *vertex .*");
@@ -195,12 +196,12 @@ void Object3D::fromFile(string filename, bool binary)
 
 }
 
-Line get_triangle_edge(const Triangle3d & triangle, unsigned int index)
+Line get_triangle_edge(const Triangle3d& triangle, unsigned int index)
 {
 	return Line{ triangle.vertices[index], (triangle.vertices[(index + 1) % 3] - triangle.vertices[index]) };
 }
 
-std::optional<std::pair<float, Vector2d>>  angleAndVertexIfClose(const Edge2d & edge, const Vector2d & vertex, const Vector2d & direction) {
+std::optional<std::pair<float, Vector2d>>  angleAndVertexIfClose(const Edge2d& edge, const Vector2d& vertex, const Vector2d& direction) {
 	if (vertex.isClose(edge.start)) {
 		return std::make_pair(directionalAngle(direction, edge.end - edge.start), edge.end);
 	}
@@ -210,7 +211,7 @@ std::optional<std::pair<float, Vector2d>>  angleAndVertexIfClose(const Edge2d & 
 	return {};
 }
 
-std::optional<Vector2d> extractClose(std::vector<Edge2d> & edges, const Vector2d & vertex, const Vector2d & direction) {
+std::optional<Vector2d> extractClose(std::list<Edge2d>& edges, const Vector2d& vertex, const Vector2d& direction) {
 	Vector2d minVertex;
 	auto minIt = edges.end();
 	float minAngle = INFINITY;
@@ -239,10 +240,10 @@ std::optional<Vector2d> extractClose(std::vector<Edge2d> & edges, const Vector2d
 	return {};
 }
 
-std::optional<SimplePolygon> linkEdges(std::vector<Edge2d> & edges) {
+std::optional<SimplePolygon> linkEdges(std::list<Edge2d>& edges) {
 	// Removes elements from edges and combines them into a simple polygon
-	std::vector<Edge2d>::iterator max = std::max_element(edges.begin(), edges.end(),
-		[](const Edge2d & lhs, const Edge2d & rhs) {
+	auto max = std::max_element(edges.begin(), edges.end(),
+		[](const Edge2d& lhs, const Edge2d& rhs) {
 			// Find edge furthest in one direction to ensure to be on outermost perimeter
 			return std::max(lhs.start[0], lhs.end[0]) < std::max(rhs.start[0], rhs.end[0]);
 		});
@@ -265,7 +266,7 @@ std::optional<SimplePolygon> linkEdges(std::vector<Edge2d> & edges) {
 	return polygon;
 }
 
-Polygon Object3D::intersect(const Plane & plane) const
+Polygon Object3D::intersect(const Plane& plane) const
 {
 	std::vector<Triangle3d> intersectingTriangles = intersects(this->triangles, plane);
 	if (intersectingTriangles.empty()) {
@@ -273,7 +274,7 @@ Polygon Object3D::intersect(const Plane & plane) const
 	}
 
 	// Find intersections between plane and triangles.
-	std::vector<Edge3d> edges3d;
+	std::list<Edge3d> edges3d;
 	for (const Triangle3d& triangle : intersectingTriangles)
 	{
 		std::vector<Edge3d> edges = intersection(plane, triangle);
@@ -281,15 +282,15 @@ Polygon Object3D::intersect(const Plane & plane) const
 	}
 
 	// Project edges into plane
-	std::vector<Edge2d> projected(edges3d.size());
-	auto dest = projected.begin();
-	for (auto it = edges3d.begin(), end = edges3d.end(); it != end; ++it, ++dest) {
-		*dest = project(plane, *it);
-	}
+	std::list<Edge2d> projected(edges3d.size());
+	std::transform(edges3d.cbegin(), edges3d.cend(), projected.begin(),
+		[&plane](const Edge3d edge) {
+			return project(plane, edge);
+		});
 
 	// Remove edges from triangles in plane
 	projected.erase(
-		std::remove_if(projected.begin(), projected.end(), [](const Edge2d & edge) {
+		std::remove_if(projected.begin(), projected.end(), [](const Edge2d& edge) {
 			return edge.normal.length() < FLOATERROR;
 			}),
 		projected.end());
@@ -328,13 +329,12 @@ Polygon combineEdges(Polygon poly) {
 	return poly;
 }
 
-std::vector<Polygon> Object3D::slice(const Plane & plane, float layerHeight)
+std::vector<Polygon> Object3D::slice(const Plane& plane, float layerHeight)
 {
 	std::vector<Polygon> slices;
 	Plane intersector = plane;
 	auto [min, max] = minMax(plane.normal);
 	float startDistance = plane.point.dot(intersector.normal) / intersector.normal.length();
-
 
 	for (float distance = min; distance <= max; distance += layerHeight) {
 		intersector.point = plane.point + plane.normal * (distance - startDistance);
@@ -344,7 +344,7 @@ std::vector<Polygon> Object3D::slice(const Plane & plane, float layerHeight)
 	return slices;
 }
 
-std::pair<float, float> Object3D::minMax(const Vector3d & direction)
+std::pair<float, float> Object3D::minMax(const Vector3d& direction)
 {
 	float min = INFINITY, max = -INFINITY;
 	for (const auto& triangle : this->triangles)
