@@ -344,4 +344,5 @@ healthchecksdb
 *.html
 *.svg
 *.xlsx
+*.gcode
 

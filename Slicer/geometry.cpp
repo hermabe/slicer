@@ -133,9 +133,6 @@ Edge2d project(const Plane& plane, const Edge3d& edge)
 	return Edge2d{ project(plane, edge.start), project(plane, edge.end), project(plane, edge.normal) };
 }
 
-Vector3d cross(const Vector3d& lhs, const Vector3d& rhs) {
-	return Vector3d(lhs[1] * rhs[2] - lhs[2] * rhs[1], lhs[2] * rhs[0] - lhs[0] * rhs[2], lhs[0] * rhs[1] - lhs[1] * rhs[0]);
-}
 
 std::vector<Triangle3d>withVertex(const std::vector<Triangle3d>& triangles, const Vector3d& vertex)
 {
