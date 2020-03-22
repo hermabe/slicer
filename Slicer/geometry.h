@@ -17,6 +17,14 @@ public:
 		static_assert(sizeof... (Args) == N, "Wrong number of elements supplied in constructor");
 	}
 	Vector<T, N>() = default;
+	Vector<T, N>(std::initializer_list<T> list) {
+		auto it = list.begin();
+		for (std::size_t i = 0; i < N; i++, it++)
+		{
+			elements[i] = *(it);
+		}
+	}
+
 	template<unsigned int M>
 	Vector<T, N>(const Vector<T, M>& rhs);
 
@@ -99,6 +107,7 @@ struct Polygon {
 
 std::vector<Triangle3d> intersects(const std::vector<Triangle3d>& triangles, const Plane& plane);
 Vector3d intersection(const Plane& plane, const Line& line);
+Vector2d intersection(const Line& lhs, const Line& rhs);
 std::vector<Edge3d> intersection(const Plane& plane, const Triangle3d& triangle);
 
 Vector2d project(const Plane& plane, const Vector3d& vector);

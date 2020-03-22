@@ -12,6 +12,18 @@ Vector3d intersection(const Plane& plane, const Line& line)
 	return line.point + line.direction * distance;
 }
 
+Vector2d intersection(const Line& lhs, const Line& rhs)
+{
+	// Assumes lines intersect
+	auto cross = [](const Vector2d & lhs, const Vector2d & rhs) {
+		return lhs[0] * rhs[1] - lhs[1] * rhs[0];
+	};
+
+	float distance = cross(rhs.point - lhs.point, lhs.direction) / cross(lhs.direction, rhs.direction);
+
+	return lhs.point + lhs.direction * distance;
+}
+
 float planeCosine(const Plane & plane, const Vector3d & vertex) {
 	// Cosine of angle between vertex and plane normal
 	return plane.normal.dot(vertex - plane.point);
