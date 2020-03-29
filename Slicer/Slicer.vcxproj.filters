@@ -33,6 +33,9 @@
     <ClCompile Include="printer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="gcode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Object3D.h">
@@ -48,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="printer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="gcode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

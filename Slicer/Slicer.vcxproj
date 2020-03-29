@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="gcode.cpp" />
     <ClCompile Include="graphics.cpp" />
     <ClCompile Include="printer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -141,6 +142,7 @@
     <ClCompile Include="vector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="gcode.h" />
     <ClInclude Include="graphics.h" />
     <ClInclude Include="printer.h" />
     <ClInclude Include="Object3D.h" />

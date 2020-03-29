@@ -4,6 +4,7 @@
 
 #include <fstream>
 
+#include "gcode.h"
 #include "geometry.h"
 #include "graphics.h"
 #include "Object3D.h"
@@ -18,6 +19,7 @@ using std::endl;
 int main() {
 	PrintSettings s = PrintSettings::fromFile("settings/settings.json");
 	Machine m = Machine::fromFile("settings/UM2.json");
+	Command c = Command::fanOff();
 	
 	//Object3D obj;
 	//string filename = "cube_bin";
