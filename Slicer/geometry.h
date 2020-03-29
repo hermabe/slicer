@@ -58,6 +58,7 @@ struct Polygon {
 
 std::vector<Triangle3d> intersects(const std::vector<Triangle3d>& triangles, const Plane& plane);
 Vector3d intersection(const Plane& plane, const Line& line);
+Vector2d intersection(const Line& lhs, const Line& rhs);
 std::vector<Edge3d> intersection(const Plane& plane, const Triangle3d& triangle);
 
 Vector2d project(const Plane& plane, const Vector3d& vector);

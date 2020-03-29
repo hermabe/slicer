@@ -16,7 +16,7 @@ float bytesToFloat(unsigned char* n) {
 }
 
 Vector3d bytesToVector3d(unsigned char bytes[12]) {
-	return Vector3d(bytesToFloat(bytes), bytesToFloat(bytes + 4), bytesToFloat(bytes + 8));
+	return { bytesToFloat(bytes), bytesToFloat(bytes + 4), bytesToFloat(bytes + 8) };
 }
 
 Triangle3d readBinaryFacet(ifstream& file) {
@@ -251,7 +251,7 @@ std::optional<SimplePolygon> linkEdges(std::list<Edge2d>& edges) {
 	SimplePolygon polygon;
 	Vector2d start = max->start[0] > max->end[0] ? max->start : max->end;
 	Vector2d vertex = start, prev;
-	Vector2d direction(1.0f, 0.0f);
+	Vector2d direction{ 1.0f, 0.0f };
 	do {
 		polygon.vertices.push_back(vertex);
 

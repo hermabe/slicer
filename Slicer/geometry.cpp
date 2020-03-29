@@ -123,9 +123,8 @@ float project(const Vector3d& base, const Vector3d& vector) {
 
 Vector2d project(const Plane& plane, const Vector3d& vector)
 {
-	Vector3d yAxis = plane.yAxis();
 	Vector3d shifted = vector - plane.point;
-	return Vector2d(project(plane.xAxis, shifted), project(yAxis, shifted));
+	return { project(plane.xAxis, shifted), project(plane.yAxis(), shifted) };
 }
 
 Edge2d project(const Plane& plane, const Edge3d& edge)

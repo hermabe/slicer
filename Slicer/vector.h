@@ -1,7 +1,6 @@
 #pragma once
 #include <cmath>
 #include <iostream>
-#include <type_traits>
 
 constexpr float FLOATERROR = 1e-5f;
 
@@ -9,12 +8,15 @@ template<typename T, unsigned int N>
 class Vector
 {
 public:
-	template<typename... Args>
-	Vector<T, N>(Args... args) : elements{ args... } {
-		static_assert(std::is_arithmetic<T>::value, "Type must be numeric");
-		static_assert(sizeof... (Args) == N, "Wrong number of elements supplied in constructor");
-	}
 	Vector<T, N>() = default;
+	Vector<T, N>(std::initializer_list<T> list) {
+		auto it = list.begin();
+		for (std::size_t i = 0; i < N; i++, it++)
+		{
+			elements[i] = *it;
+		}
+	}
+
 	template<unsigned int M>
 	Vector<T, N>(const Vector<T, M>& rhs);
 
